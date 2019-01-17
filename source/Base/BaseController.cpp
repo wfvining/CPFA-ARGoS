@@ -1,5 +1,6 @@
 #include "BaseController.h"
 #include <random>
+#include <unistd.h> // gethostname
 
 using namespace std;
 
@@ -32,6 +33,56 @@ BaseController::BaseController() :
 	ForageRangeX.Set(-rangeX, rangeX);
 	ForageRangeY.Set(-rangeY, rangeY);
 	GoStraightAngleRangeInDegrees.Set(-37.5, 37.5);
+}
+
+void BaseController::Init(argos::TConfigurationNode& node)
+{
+   compassSensor   = GetSensor<argos::CCI_PositioningSensor>("positioning");
+   wheelActuator   = GetActuator<argos::CCI_DifferentialSteeringActuator>("differential_steering");
+   proximitySensor = GetSensor<argos::CCI_FootBotProximitySensor>("footbot_proximity");
+   argos::TConfigurationNode settings = argos::GetNode(node, "settings");
+
+   argos::GetNodeAttribute(settings, "FoodDistanceTolerance",   FoodDistanceTolerance);
+   argos::GetNodeAttribute(settings, "TargetDistanceTolerance", TargetDistanceTolerance);
+   argos::GetNodeAttribute(settings, "NestDistanceTolerance",   NestDistanceTolerance);
+   argos::GetNodeAttribute(settings, "NestAngleTolerance",      NestAngleTolerance);
+   argos::GetNodeAttribute(settings, "TargetAngleTolerance",    TargetAngleTolerance);
+   argos::GetNodeAttribute(settings, "SearchStepSize",          SearchStepSize);
+   argos::GetNodeAttribute(settings, "RobotForwardSpeed",       RobotForwardSpeed);
+   argos::GetNodeAttribute(settings, "RobotRotationSpeed",      RobotRotationSpeed);
+   argos::GetNodeAttribute(settings, "ResultsDirectoryPath",    results_path);
+   argos::GetNodeAttribute(settings, "DestinationNoiseStdev",   DestinationNoiseStdev);
+   argos::GetNodeAttribute(settings, "PositionNoiseStdev",      PositionNoiseStdev);
+
+   argos::CVector2 p(GetPosition());
+   SetStartPosition(argos::CVector3(p.GetX(), p.GetY(), 0.0));
+
+   FoodDistanceTolerance *= FoodDistanceTolerance;
+   SetIsHeadingToNest(true);
+   SetTarget(argos::CVector2(0,0));
+   controllerID= GetId();
+
+   // Name the results file with the current time and date
+   time_t t = time(0);   // get time now
+   struct tm * now = localtime(&t);
+   stringstream ss;
+
+   char hostname[1024];
+   hostname[1023] = '\0';
+   gethostname(hostname, 1023);
+
+   ss << "CPFA-"<<GIT_BRANCH<<"-"<<GIT_COMMIT_HASH<<"-"
+      << hostname          << '-'
+      << getpid()          << '-'
+      << (now->tm_year)    << '-'
+      << (now->tm_mon + 1) << '-'
+      <<  now->tm_mday     << '-'
+      <<  now->tm_hour     << '-'
+      <<  now->tm_min      << '-'
+      <<  now->tm_sec      << ".csv";
+
+   string results_file_name = ss.str();
+   results_full_path = results_path+"/"+results_file_name;
 }
 
 argos::CRadians BaseController::GetHeading() {
@@ -466,6 +517,11 @@ bool BaseController::IsAtTarget()
 	//argos::LOG << "IsAtTarget: TargetDistanceTolerance: " << DistTol << endl;
 
 	return (distanceToTarget < DistTol) ? (true) : (false);
+}
+
+argos::CLoopFunctions& BaseController::GetLoopFunctions()
+{
+   return LF;
 }
 
 //REGISTER_CONTROLLER(BaseController, "BaseController")

@@ -9,7 +9,8 @@
 #include <argos3/core/simulator/loop_functions.h>
 #include <cmath>
 #include <stack>
-
+#include <string>
+#include <argos3/core/simulator/loop_functions.h>
 /**
  * BaseController
  * @author Antonio Griego
@@ -43,7 +44,15 @@ class BaseController : public argos::CCI_Controller {
 		void SetIsHeadingToNest(bool n);
 		bool IsAtTarget();
 
+   void Init(argos::TConfigurationNode& node) override;
+   argos::CLoopFunctions& GetLoopFunctions();
+
 	protected:
+
+   argos::Real FoodDistanceTolerance;
+   std::string results_path;
+   std::string results_full_path;
+   std::string controllerID;
 
 		argos::CRandom::CRNG* RNG;
 

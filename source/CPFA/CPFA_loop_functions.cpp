@@ -92,13 +92,11 @@ void CPFA_loop_functions::Init(argos::TConfigurationNode &node) {
 	argos::CSpace::TMapPerType::iterator it;
 
     Num_robots = footbots.size();
-	for(it = footbots.begin(); it != footbots.end(); it++) {
-		argos::CFootBotEntity& footBot = *argos::any_cast<argos::CFootBotEntity*>(it->second);
-		BaseController& c = dynamic_cast<BaseController&>(footBot.GetControllableEntity().GetController());
-		CPFA_controller& c2 = dynamic_cast<CPFA_controller&>(c);
-
-		c2.SetLoopFunctions(this);
-	}
+	// for(it = footbots.begin(); it != footbots.end(); it++) {
+	// 	argos::CFootBotEntity& footBot = *argos::any_cast<argos::CFootBotEntity*>(it->second);
+	// 	SharedLoopFunctions& c = dynamic_cast<SharedLoopFunctions&>(footBot.GetControllableEntity().GetController());
+	// 	c.SetLoopFunctions(this);
+    // }
 
 	SetFoodDistribution();
     ForageList.clear(); 

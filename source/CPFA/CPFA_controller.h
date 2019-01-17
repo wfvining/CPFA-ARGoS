@@ -19,7 +19,6 @@ class CPFA_controller : public BaseController {
 		CPFA_controller();
 
 		// CCI_Controller inheritence functions
-		void Init(argos::TConfigurationNode &node);
 		void ControlStep();
 		void Reset();
 
@@ -27,12 +26,7 @@ class CPFA_controller : public BaseController {
 		bool IsUsingSiteFidelity();
 		bool IsInTheNest();
 
-		Real FoodDistanceTolerance;
-
-		void SetLoopFunctions(CPFA_loop_functions* lf);
-
 	private:
-        string controllerID;
 		CPFA_loop_functions* LoopFunctions;
 		argos::CRandom::CRNG* RNG;
 
@@ -87,8 +81,6 @@ class CPFA_controller : public BaseController {
 
 		CVector2 previous_position;
 
-		string results_path;
-		string results_full_path;
 		bool isUsingPheromone;
 
 		unsigned int survey_count;

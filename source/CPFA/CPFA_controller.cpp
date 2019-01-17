@@ -1,5 +1,4 @@
 #include "CPFA_controller.h"
-#include <unistd.h>
 
 CPFA_controller::CPFA_controller() :
 	RNG(argos::CRandom::CreateRNG("argos")),
@@ -17,33 +16,7 @@ CPFA_controller::CPFA_controller() :
     SiteFidelityPosition(1000, 1000),
     updateFidelity(false)
 {
-}
-
-void CPFA_controller::Init(argos::TConfigurationNode &node) {
-	compassSensor   = GetSensor<argos::CCI_PositioningSensor>("positioning");
-	wheelActuator   = GetActuator<argos::CCI_DifferentialSteeringActuator>("differential_steering");
-	proximitySensor = GetSensor<argos::CCI_FootBotProximitySensor>("footbot_proximity");
-	argos::TConfigurationNode settings = argos::GetNode(node, "settings");
-
-	argos::GetNodeAttribute(settings, "FoodDistanceTolerance",   FoodDistanceTolerance);
-	argos::GetNodeAttribute(settings, "TargetDistanceTolerance", TargetDistanceTolerance);
-	argos::GetNodeAttribute(settings, "NestDistanceTolerance", NestDistanceTolerance);
-	argos::GetNodeAttribute(settings, "NestAngleTolerance",    NestAngleTolerance);
-	argos::GetNodeAttribute(settings, "TargetAngleTolerance",    TargetAngleTolerance);
-	argos::GetNodeAttribute(settings, "SearchStepSize",          SearchStepSize);
-	argos::GetNodeAttribute(settings, "RobotForwardSpeed",       RobotForwardSpeed);
-	argos::GetNodeAttribute(settings, "RobotRotationSpeed",      RobotRotationSpeed);
-	argos::GetNodeAttribute(settings, "ResultsDirectoryPath",      results_path);
-	argos::GetNodeAttribute(settings, "DestinationNoiseStdev",      DestinationNoiseStdev);
-	argos::GetNodeAttribute(settings, "PositionNoiseStdev",      PositionNoiseStdev);
-
-	argos::CVector2 p(GetPosition());
-	SetStartPosition(argos::CVector3(p.GetX(), p.GetY(), 0.0));
-
-	FoodDistanceTolerance *= FoodDistanceTolerance;
-	SetIsHeadingToNest(true);
-	SetTarget(argos::CVector2(0,0));
-    controllerID= GetId();
+   LoopFunctions = &static_cast<CPFA_loop_functions&>(GetLoopFunctions());
 }
 
 void CPFA_controller::ControlStep() {
@@ -162,76 +135,6 @@ void CPFA_controller::CPFA() {
 bool CPFA_controller::IsInTheNest() {
 	return ((GetPosition() - LoopFunctions->NestPosition).SquareLength()
 		< LoopFunctions->NestRadiusSquared);
-}
-
-void CPFA_controller::SetLoopFunctions(CPFA_loop_functions* lf) {
-	LoopFunctions = lf;
-
-	// Initialize the SiteFidelityPosition
-
-	// Create the output file here because it needs LoopFunctions
-		
-	// Name the results file with the current time and date
-	time_t t = time(0);   // get time now
-	struct tm * now = localtime(&t);
-	stringstream ss;
-
-	char hostname[1024];                                                   
-	hostname[1023] = '\0';                    
-	gethostname(hostname, 1023);  
-
-	ss << "CPFA-"<<GIT_BRANCH<<"-"<<GIT_COMMIT_HASH<<"-"
-		<< hostname << '-'
-		<< getpid() << '-'
-		<< (now->tm_year) << '-'
-		<< (now->tm_mon + 1) << '-'
-		<<  now->tm_mday << '-'
-		<<  now->tm_hour << '-'
-		<<  now->tm_min << '-'
-		<<  now->tm_sec << ".csv";
-
-		string results_file_name = ss.str();
-		results_full_path = results_path+"/"+results_file_name;
-
-	// Only the first robot should do this:	 
-	if (GetId().compare("CPFA_0") == 0) {
-		/*
-		ofstream results_output_stream;
-		results_output_stream.open(results_full_path, ios::app);
-		results_output_stream << "NumberOfRobots, "
-			<< "TargetDistanceTolerance, "
-			<< "TargetAngleTolerance, "
-			<< "FoodDistanceTolerance, "
-			<< "RobotForwardSpeed, "
-			<< "RobotRotationSpeed, "
-			<< "RandomSeed, "
-			<< "ProbabilityOfSwitchingToSearching, "
-			<< "ProbabilityOfReturningToNest, "
-			<< "UninformedSearchVariation, "   
-			<< "RateOfInformedSearchDecay, "   
-			<< "RateOfSiteFidelity, "          
-			<< "RateOfLayingPheromone, "       
-			<< "RateOfPheromoneDecay" << endl
-			<< LoopFunctions->getNumberOfRobots() << ", "
-			<< CSimulator::GetInstance().GetRandomSeed() << ", "  
-			<< TargetDistanceTolerance << ", "
-			<< TargetAngleTolerance << ", "
-			<< FoodDistanceTolerance << ", "
-			<< RobotForwardSpeed << ", "
-			<< RobotRotationSpeed << ", "
-			<< LoopFunctions->getProbabilityOfSwitchingToSearching() << ", "
-			<< LoopFunctions->getProbabilityOfReturningToNest() << ", "
-			<< LoopFunctions->getUninformedSearchVariation() << ", "
-			<< LoopFunctions->getRateOfInformedSearchDecay() << ", "
-			<< LoopFunctions->getRateOfSiteFidelity() << ", "
-			<< LoopFunctions->getRateOfLayingPheromone() << ", "
-			<< LoopFunctions->getRateOfPheromoneDecay()
-			<< endl;
-				
-			results_output_stream.close();
-		*/
-	}
-
 }
 
 void CPFA_controller::Departing()
