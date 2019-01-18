@@ -42,6 +42,7 @@ class BaseController : public argos::CCI_Controller {
 
 		void SetIsHeadingToNest(bool n);
 		bool IsAtTarget();
+        bool CollisionDetected();
 
 	protected:
 

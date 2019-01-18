@@ -82,8 +82,8 @@ void CPFA_loop_functions::Init(argos::TConfigurationNode &node) {
     NumDistributedFood = FoodItemCount;  
 	// calculate the forage range and compensate for the robot's radius of 0.085m
 	argos::CVector3 ArenaSize = GetSpace().GetArenaSize();
-	argos::Real rangeX = (ArenaSize.GetX() / 2.0) - 0.085;
-	argos::Real rangeY = (ArenaSize.GetY() / 2.0) - 0.085;
+	argos::Real rangeX = (ArenaSize.GetX() / 2.0) - 0.2;
+	argos::Real rangeY = (ArenaSize.GetY() / 2.0) - 0.2;
 	ForageRangeX.Set(-rangeX, rangeX);
 	ForageRangeY.Set(-rangeY, rangeY);
 

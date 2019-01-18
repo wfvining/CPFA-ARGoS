@@ -80,17 +80,7 @@ void BaseController::SetTarget(argos::CVector2 t) {
 
 	argos::Real x(t.GetX()), y(t.GetY());
 
-	//if(x > ForageRangeX.GetMax()) x = ForageRangeX.GetMax();
-	//else if(x < ForageRangeX.GetMin()) x = ForageRangeX.GetMin();
-	
-	//if(y > ForageRangeY.GetMax()) y = ForageRangeY.GetMax();
-	//else if(y < ForageRangeY.GetMin()) y = ForageRangeY.GetMin();
-	
-	//argos::LOG << "<<Updating Target Position>>" << std::endl;
-
-	//argos::LOG << "x: "<< x << std::endl;
-	//argos::LOG << "y:" << y << std::endl;
-
+#if 0
 	if (!heading_to_nest) {
 		argos::Real distanceToTarget = (TargetPosition - GetPosition()).Length();
 		argos::Real noise_x = RNG->Gaussian(DestinationNoiseStdev*distanceToTarget);
@@ -99,15 +89,13 @@ void BaseController::SetTarget(argos::CVector2 t) {
 		x += noise_x;
 		y += noise_y;
 
-		//argos::LOG << "Not Heading to Nest " << std::endl;
-		//argos::LOG << "Noise x: "<< noise_x << std::endl;
-		//argos::LOG << "Noise y:" << noise_y << std::endl;
 	} else {
 		//argos::LOG << "Heading to Nest " << std::endl;
 	}
+#endif
 
 	if(y > ForageRangeY.GetMax() || y < ForageRangeY.GetMin() ||
-			x > ForageRangeX.GetMax() || x < ForageRangeX.GetMin()) {
+       x > ForageRangeX.GetMax() || x < ForageRangeX.GetMin()) {
 		x = GetPosition().GetX();
 		y = GetPosition().GetY();
 		SetRightTurn(37.5);
@@ -292,6 +280,14 @@ void BaseController::PopMovement() {
 
 	}
 
+}
+
+bool BaseController::CollisionDetected()
+{
+   argos::CVector2 collisionVector = GetCollisionVector();
+   argos::Real collisionAngle = ToDegrees(collisionVector.Angle()).GetValue();
+   return GoStraightAngleRangeInDegrees.WithinMinBoundIncludedMaxBoundIncluded(collisionAngle)
+      && collisionVector.Length() > 0.0;
 }
 
 bool BaseController::CollisionDetection() {

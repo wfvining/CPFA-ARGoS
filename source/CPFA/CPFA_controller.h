@@ -51,6 +51,10 @@ class CPFA_controller : public BaseController {
 		bool isHoldingFood;
 		bool isUsingSiteFidelity;
 		bool isGivingUpSearch;
+   bool hasSavedTarget;
+   argos::CVector2 savedTarget;
+
+   argos::CRadians informedHeading;
 
 		size_t ResourceDensity;
 		size_t MaxTrailSize;
@@ -78,6 +82,7 @@ class CPFA_controller : public BaseController {
 		void SetFidelityList(argos::CVector2 newFidelity);
 		void SetFidelityList();
 		bool SetTargetPheromone();
+        bool AtMaximumRange();
 
 		argos::Real GetExponentialDecay(argos::Real value, argos::Real time, argos::Real lambda);
 		argos::Real GetBound(argos::Real value, argos::Real min, argos::Real max);

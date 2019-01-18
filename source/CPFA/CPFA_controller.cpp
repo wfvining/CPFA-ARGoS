@@ -15,7 +15,9 @@ CPFA_controller::CPFA_controller() :
 	survey_count(0),
 	isUsingPheromone(0),
     SiteFidelityPosition(1000, 1000),
-    updateFidelity(false)
+    updateFidelity(false),
+    hasSavedTarget(false),
+    savedTarget(0, 0)
 {
 }
 
@@ -47,46 +49,6 @@ void CPFA_controller::Init(argos::TConfigurationNode &node) {
 }
 
 void CPFA_controller::ControlStep() {
-	/*
-	ofstream log_output_stream;
-	log_output_stream.open("cpfa_log.txt", ios::app);
-
-	// depart from nest after food drop off or simulation start
-	if (isHoldingFood) log_output_stream << "(Carrying) ";
-	
-	switch(CPFA_state)  {
-		case DEPARTING:
-			if (isUsingSiteFidelity) {
-				log_output_stream << "DEPARTING (Fidelity): "
-					<< GetTarget().GetX() << ", " << GetTarget().GetY()
-					<< endl;
-			} else if (isInformed) {
-				log_output_stream << "DEPARTING (Waypoint): "
-				<< GetTarget().GetX() << ", " << GetTarget().GetY() << endl;
-			} else {
-				log_output_stream << "DEPARTING (Searching): "
-				<< GetTarget().GetX() << ", " << GetTarget().GetY() << endl;
-			}
-			break;
-		// after departing(), once conditions are met, begin searching()
-		case SEARCHING:
-			if (isInformed) log_output_stream << "SEARCHING: Informed" << endl;     
-			else log_output_stream << "SEARCHING: UnInformed" << endl;
-			break;
-		// return to nest after food pick up or giving up searching()
-		case RETURNING:
-			log_output_stream << "RETURNING" << endl;
-			break;
-		case SURVEYING:
-			log_output_stream << "SURVEYING" << endl;
-			break;
-		default:
-			log_output_stream << "Unknown state" << endl;
-	}
-	*/
-
-	// Add line so we can draw the trail
-
 	CVector3 position3d(GetPosition().GetX(), GetPosition().GetY(), 0.00);
 	CVector3 target3d(previous_position.GetX(), previous_position.GetY(), 0.00);
 	CRay3 targetRay(target3d, position3d);
@@ -134,7 +96,8 @@ void CPFA_controller::CPFA() {
 		// depart from nest after food drop off or simulation start
 		case DEPARTING:
 			//argos::LOG << "DEPARTING" << std::endl;
-			SetIsHeadingToNest(false);
+           //SetIsHeadingToNest(false);
+           SetIsHeadingToNest(true);
 			Departing();
 			break;
 		// after departing(), once conditions are met, begin searching()
@@ -192,46 +155,6 @@ void CPFA_controller::SetLoopFunctions(CPFA_loop_functions* lf) {
 
 		string results_file_name = ss.str();
 		results_full_path = results_path+"/"+results_file_name;
-
-	// Only the first robot should do this:	 
-	if (GetId().compare("CPFA_0") == 0) {
-		/*
-		ofstream results_output_stream;
-		results_output_stream.open(results_full_path, ios::app);
-		results_output_stream << "NumberOfRobots, "
-			<< "TargetDistanceTolerance, "
-			<< "TargetAngleTolerance, "
-			<< "FoodDistanceTolerance, "
-			<< "RobotForwardSpeed, "
-			<< "RobotRotationSpeed, "
-			<< "RandomSeed, "
-			<< "ProbabilityOfSwitchingToSearching, "
-			<< "ProbabilityOfReturningToNest, "
-			<< "UninformedSearchVariation, "   
-			<< "RateOfInformedSearchDecay, "   
-			<< "RateOfSiteFidelity, "          
-			<< "RateOfLayingPheromone, "       
-			<< "RateOfPheromoneDecay" << endl
-			<< LoopFunctions->getNumberOfRobots() << ", "
-			<< CSimulator::GetInstance().GetRandomSeed() << ", "  
-			<< TargetDistanceTolerance << ", "
-			<< TargetAngleTolerance << ", "
-			<< FoodDistanceTolerance << ", "
-			<< RobotForwardSpeed << ", "
-			<< RobotRotationSpeed << ", "
-			<< LoopFunctions->getProbabilityOfSwitchingToSearching() << ", "
-			<< LoopFunctions->getProbabilityOfReturningToNest() << ", "
-			<< LoopFunctions->getUninformedSearchVariation() << ", "
-			<< LoopFunctions->getRateOfInformedSearchDecay() << ", "
-			<< LoopFunctions->getRateOfSiteFidelity() << ", "
-			<< LoopFunctions->getRateOfLayingPheromone() << ", "
-			<< LoopFunctions->getRateOfPheromoneDecay()
-			<< endl;
-				
-			results_output_stream.close();
-		*/
-	}
-
 }
 
 void CPFA_controller::Departing()
@@ -239,55 +162,48 @@ void CPFA_controller::Departing()
 	argos::Real distanceToTarget = (GetPosition() - GetTarget()).Length();
 	argos::Real randomNumber = RNG->Uniform(argos::CRange<argos::Real>(0.0, 1.0));
 
-	/*
-	ofstream log_output_stream;
-	log_output_stream.open("cpfa_log.txt", ios::app);
-	log_output_stream << "Distance to target: " << distanceToTarget << endl;
-	log_output_stream << "Current Position: " << GetPosition() << ", Target: " << GetTarget() << endl;
-	log_output_stream.close();
-	*/
+    argos::Real targetHeading = RNG->Uniform(argos::CRange<argos::Real>(0.0, argos::CRadians::TWO_PI.GetValue()));
+    argos::CVector2 turn_vector(100, argos::CRadians(targetHeading));
 
 	/* When not informed, continue to travel until randomly switching to the searching state. */
 	if((SimulationTick() % (SimulationTicksPerSecond() / 2)) == 0) {
 		if(!isInformed){
-   if(randomNumber < LoopFunctions->ProbabilityOfSwitchingToSearching && GetTarget() != argos::CVector2(0,0)) {
-     Stop();
-     SearchTime = 0;
+           if(randomNumber < LoopFunctions->ProbabilityOfSwitchingToSearching && GetTarget() != argos::CVector2(0,0)) {
+              Stop();
+              SearchTime = 0;
 			  CPFA_state = SEARCHING;
-			  argos::Real USV = LoopFunctions->UninformedSearchVariation.GetValue();
-			  argos::Real rand = RNG->Gaussian(USV);
-			  argos::CRadians rotation(rand);
-			  argos::CRadians angle1(rotation.UnsignedNormalize());
-			  argos::CRadians angle2(GetHeading().UnsignedNormalize());
-			  argos::CRadians turn_angle(angle1 + angle2);
-			  argos::CVector2 turn_vector(SearchStepSize, turn_angle);
-            
 			  SetIsHeadingToNest(false);
 			  SetTarget(turn_vector + GetPosition());
-		  }
-    else if(distanceToTarget < TargetDistanceTolerance) {
-     SetRandomSearchLocation();
-    }
-  }
+           }
+           else if(distanceToTarget < TargetDistanceTolerance) {
+              SetRandomSearchLocation();
+           }
+        }
 	}
 	
 	/* Are we informed? I.E. using site fidelity or pheromones. */	
 	if(isInformed && distanceToTarget < TargetDistanceTolerance) {
 	
-		//ofstream log_output_stream;
-		//log_output_stream.open("cpfa_log.txt", ios::app);
-		//log_output_stream << "Reached waypoint: " << SiteFidelityPosition << endl;
-
 		SearchTime = 0;
 		CPFA_state = SEARCHING;
 	
 		if(isUsingSiteFidelity == true) {
 			isUsingSiteFidelity = false;
 			SetFidelityList();
-			//log_output_stream << "After SetFidelityList: " << SiteFidelityPosition << endl;
-			//log_output_stream.close();
 		}
+
 	}
+
+    if(isInformed && (GetPosition() - LoopFunctions->NestPosition).Length() < TargetDistanceTolerance);
+    {
+       informedHeading = GetHeading();
+    }
+}
+
+bool CPFA_controller::AtMaximumRange()
+{
+   return !(LoopFunctions->ForageRangeX.WithinMinBoundExcludedMaxBoundExcluded(GetPosition().GetX()) &&
+            LoopFunctions->ForageRangeY.WithinMinBoundExcludedMaxBoundExcluded(GetPosition().GetY()));
 }
 
 void CPFA_controller::Searching() {
@@ -306,8 +222,9 @@ void CPFA_controller::Searching() {
 		// we are currently using informed or uninformed search.
 		if(distance.SquareLength() < TargetDistanceTolerance) {
 
-			// randomly give up searching
-			if(random < LoopFunctions->ProbabilityOfReturningToNest) {
+           // Give up searching if there is an obstacle or we have
+           // reached the edge of the arena.
+           if(AtMaximumRange() /*|| CollisionDetected()*/) {
              SetFidelityList();
    	         TrailToShare.clear();
 				SetIsHeadingToNest(true);
@@ -317,16 +234,36 @@ void CPFA_controller::Searching() {
              isUsingSiteFidelity = false; 
              updateFidelity = false; 
 				CPFA_state = RETURNING;
-			
-				/*
-				ofstream log_output_stream;
-				log_output_stream.open("giveup.txt", ios::app);
-				log_output_stream << "Give up: " << SimulationTick() / SimulationTicksPerSecond() << endl;
-				log_output_stream.close();
-				*/
-
 				return;
 			}
+
+           // This is a hack to get the robot to return to its
+           // previous position and heading after avoiding a
+           // collision. Effectively it causes the robot to attempt to
+           // remain in the same place until the collision is over. If
+           // it has been forces to move it uses site fidelity to
+           // return to that position before continuing on its search
+           // heading. This ensures that no part of the search "ray"
+           // is missed. Because the robot is in the SEARCHING state
+           // we know it is safe to override the site fidelity list.
+           // This hack is necessary because obstacle avoidance logic
+           // is burried in the base controller where it would be
+           // difficult to implement this logic without considerable a
+           // considerable reimplementation of the BaseController
+           // functionality.
+           //
+           // WFV: 17 January 2019 
+            if(CollisionDetected())
+            {
+               SiteFidelityPosition = GetPosition();
+               isUsingSiteFidelity = true;
+               updateFidelity = true;
+               isInformed = true;
+               LoopFunctions->FidelityList[controllerID] = SiteFidelityPosition;
+               CPFA_state = DEPARTING;
+               SetTarget(SiteFidelityPosition);
+               return;
+            }
 
 			// uninformed search
 			if(isInformed == false) {
@@ -338,23 +275,6 @@ void CPFA_controller::Searching() {
 				argos::CRadians turn_angle(angle1 + angle2);
 				argos::CVector2 turn_vector(SearchStepSize, turn_angle);
 
-				//argos::LOG << "UNINFORMED SEARCH: rotation: " << angle1 << std::endl;
-				//argos::LOG << "UNINFORMED SEARCH: old heading: " << angle2 << std::endl;
-
-				/*
-				ofstream log_output_stream;
-				log_output_stream.open("uninformed_angle1.log", ios::app);
-				log_output_stream << angle1.GetValue() << endl;
-				log_output_stream.close();
-
-				log_output_stream.open("uninformed_angle2.log", ios::app);
-				log_output_stream << angle2.GetValue() << endl;
-				log_output_stream.close();
-
-				log_output_stream.open("uninformed_turning_angle.log", ios::app);
-				log_output_stream << turn_angle.GetValue() << endl;
-				log_output_stream.close();
-				*/
 				SetIsHeadingToNest(false);
 				SetTarget(turn_vector + GetPosition());
 			}
@@ -364,41 +284,25 @@ void CPFA_controller::Searching() {
 				SetIsHeadingToNest(false);
 				
 				if(IsAtTarget()) {
-				    size_t          t           = SearchTime++;
-				    argos::Real     twoPi       = (argos::CRadians::TWO_PI).GetValue();
-				    argos::Real     pi          = (argos::CRadians::PI).GetValue();
-				    argos::Real     isd         = LoopFunctions->RateOfInformedSearchDecay;
-				    argos::Real     correlation = GetExponentialDecay((2.0 * twoPi) - LoopFunctions->UninformedSearchVariation.GetValue(), t, isd);
-				    argos::Real     rand = RNG->Gaussian(correlation + LoopFunctions->UninformedSearchVariation.GetValue());
-				    argos::CRadians rotation(GetBound(rand, -pi, pi));
-				    argos::CRadians angle1(rotation);
-				    argos::CRadians angle2(GetHeading());
-				    argos::CRadians turn_angle(angle2 + angle1);
-				    argos::CVector2 turn_vector(SearchStepSize, turn_angle);
-
-				    //argos::LOG << "INFORMED SEARCH: rotation: " << angle1 << std::endl;
-				    //argos::LOG << "INFORMED SEARCH: old heading: " << angle2 << std::endl;
-
-				    /*
-				    ofstream log_output_stream;
-				    log_output_stream.open("informed_angle1.log", ios::app);
-				    log_output_stream << angle1.GetValue() << endl;
-				    log_output_stream.close();
-
-    				log_output_stream.open("informed_angle2.log", ios::app);
-	    			log_output_stream << angle2.GetValue() << endl;
-	    			log_output_stream.close();
-
-	    			log_output_stream.open("informed_turning_angle.log", ios::app);
-	    			log_output_stream << turn_angle.GetValue() << endl;
-	    			log_output_stream.close();
-	    			*/
-				    SetTarget(turn_vector + GetPosition());
+                   hasSavedTarget = false;
+                   argos::CRadians target_heading = (GetPosition() - LoopFunctions->NestPosition).Angle();
+                   argos::CRadians turn_agnle = GetHeading().SignedNormalize() + target_heading;
+                   argos::CVector2 turn_vector(SearchStepSize, target_heading);
+                   if(fabs((GetHeading() - target_heading).SignedNormalize().GetValue())
+                      < TargetAngleTolerance.GetValue())
+                   {
+                      isInformed = false;
+                   }
+                   else
+                   {
+                      SetIsHeadingToNest(true);
+                      SetTarget(GetPosition() + turn_vector);
+                   }
 				}
 			}
 		}
 		else {
-			//argos::LOG << "SEARCH: Haven't reached destination. " << GetPosition() << "," << GetTarget() << std::endl;
+           //argos::LOG << "SEARCH: Haven't reached destination. " << GetPosition() << "," << GetTarget() << std::endl;
 		}
 	}
 	else {
