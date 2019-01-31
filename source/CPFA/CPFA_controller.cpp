@@ -253,7 +253,7 @@ void CPFA_controller::Searching() {
            // functionality.
            //
            // WFV: 17 January 2019 
-            if(CollisionDetected())
+            if(CollisionDetected() && !isUsingSiteFidelity)
             {
                SiteFidelityPosition = GetPosition();
                isUsingSiteFidelity = true;
