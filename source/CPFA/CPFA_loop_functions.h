@@ -128,7 +128,12 @@ class CPFA_loop_functions : public argos::CLoopFunctions
 		bool IsOutOfBounds(argos::CVector2 p, size_t length, size_t width);
 		bool IsCollidingWithNest(argos::CVector2 p);
 		bool IsCollidingWithFood(argos::CVector2 p);
+   double calculatePerfectTime() const;
 		double score;
+   argos::Real nintyPercentTime = 0;
+   argos::Real nintyFivePercentTime = 0;
+   argos::Real nintyNinePercentTime = 0;
+   double perfectTime;
 		int PrintFinalScore;
 };
 

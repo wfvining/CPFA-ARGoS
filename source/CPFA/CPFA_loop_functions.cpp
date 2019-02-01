@@ -144,6 +144,9 @@ void CPFA_loop_functions::PreStep() {
 		}
 	}
 
+    double collectedRatio = score / (double)NumDistributedFood;
+    if(collectedRatio)
+
 	if(FoodList.size() == 0) {
 		FidelityList.clear();
 		TargetRayList.clear();
@@ -158,7 +161,7 @@ void CPFA_loop_functions::PostStep() {
 bool CPFA_loop_functions::IsExperimentFinished() {
 	bool isFinished = false;
 
-	if(FoodList.size() == 0 || GetSpace().GetSimulationClock() >= MaxSimTime) {
+	if(score == NumDistributedFood /* || GetSpace().GetSimulationClock() >= MaxSimTime*/) {
 		isFinished = true;
 	}
 
@@ -178,7 +181,13 @@ bool CPFA_loop_functions::IsExperimentFinished() {
 }
 
 void CPFA_loop_functions::PostExperiment() {
-	if (PrintFinalScore == 1) printf("%f, %f\n", getSimTimeInSeconds(), score);
+   if (PrintFinalScore == 1) {
+      std::cout << perfectTime          << " "
+                << nintyPercentTime     << " "
+                << nintyFivePercentTime << " "
+                << nintyNinePercentTime << " "
+                << getSimTimeInSeconds() << std::endl;
+   }
 }
 
 argos::CColor CPFA_loop_functions::GetFloorColor(const argos::CVector2 &c_pos_on_floor) {
@@ -210,6 +219,19 @@ void CPFA_loop_functions::UpdatePheromoneList() {
 	PheromoneList = new_p_list;
 }
 
+double CPFA_loop_functions::calculatePerfectTime() const
+{
+   double total_time = 0;
+   double robotSpeed = 0.16; // 16 cm/s
+   double scanTime   = 4.0;  // According to a comment @ CPFA_controller.cpp:565
+   for(argos::CVector2 f : FoodList)
+   {
+      double distance = f.Length();
+      double time_to_retrieve = 2*robotSpeed*distance + scanTime;
+      total_time += time_to_retrieve;
+   }
+}
+
 void CPFA_loop_functions::SetFoodDistribution() {
 	switch(FoodDistribution) {
 		case 0:
@@ -224,6 +246,8 @@ void CPFA_loop_functions::SetFoodDistribution() {
 		default:
 			argos::LOGERR << "ERROR: Invalid food distribution in XML file.\n";
 	}
+
+    perfectTime = calculatePerfectTime();
 }
 
 void CPFA_loop_functions::RandomFoodDistribution() {
@@ -479,10 +503,22 @@ void CPFA_loop_functions::SetTrial(unsigned int v) {
 }
 
 void CPFA_loop_functions::setScore(double s) {
+   double r = s / NumDistributedFood;
+   double old_r = score / NumDistributedFood;
+   if(r >= 0.9 && old_r < 0.9)
+   {
+      nintyPercentTime = getSimTimeInSeconds();
+   }
+   else if(r >= 0.95 && old_r < 0.95)
+   {
+      nintyFivePercentTime = getSimTimeInSeconds();
+   }
+   else if(r >= 0.99 && old_r < 0.99)
+   {
+      nintyNinePercentTime = getSimTimeInSeconds();
+   }
+
 	score = s;
-	if (score >= FoodItemCount) {
-		PostExperiment();
-	}
 }
 
 double CPFA_loop_functions::Score() {	
