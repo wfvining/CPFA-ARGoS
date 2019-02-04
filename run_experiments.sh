@@ -12,12 +12,12 @@ fi
 
 tag=$1
 
-iterations=30
+iterations=5
 
 let i=1
 for clustersize in 4 8 16
 do
-    for size in 10 20 40 80 160
+    for size in 10 20 40 80 160 320
     do
         for r in 1.6 0.8 0.4 0.2 0.1 0.05
         do

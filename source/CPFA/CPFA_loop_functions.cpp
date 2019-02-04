@@ -183,6 +183,7 @@ bool CPFA_loop_functions::IsExperimentFinished() {
 void CPFA_loop_functions::PostExperiment() {
    if (PrintFinalScore == 1) {
       std::cout << perfectTime          << " "
+                << firstTime            << " "
                 << nintyPercentTime     << " "
                 << nintyFivePercentTime << " "
                 << nintyNinePercentTime << " "
@@ -505,6 +506,10 @@ void CPFA_loop_functions::SetTrial(unsigned int v) {
 void CPFA_loop_functions::setScore(double s) {
    double r = s / NumDistributedFood;
    double old_r = score / NumDistributedFood;
+   if(score == 0 && s > 0) {
+      firstTime = getSimTimeInSeconds();
+   }
+
    if(r >= 0.9 && old_r < 0.9)
    {
       nintyPercentTime = getSimTimeInSeconds();

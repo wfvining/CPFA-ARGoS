@@ -133,6 +133,7 @@ class CPFA_loop_functions : public argos::CLoopFunctions
    argos::Real nintyPercentTime = 0;
    argos::Real nintyFivePercentTime = 0;
    argos::Real nintyNinePercentTime = 0;
+   argos::Real firstTime = 0;
    double perfectTime;
 		int PrintFinalScore;
 };
