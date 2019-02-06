@@ -12,14 +12,14 @@ fi
 
 tag=$1
 
-iterations=5
+iterations=10
 
 let i=1
 for clustersize in 4 8 16
 do
     for size in 10 20 40 80 160 320
     do
-        for r in 1.6 0.8 0.4 0.2 0.1 0.05
+        for r in 1.6 1.2 0.8 0.6 0.4 0.3 0.2 0.15 0.1
         do
             file=BCPFA_c${clustersize}_R${size}_r${r}_${tag}.argos
             erb -T - \
