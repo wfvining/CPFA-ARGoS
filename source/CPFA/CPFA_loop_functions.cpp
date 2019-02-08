@@ -231,6 +231,7 @@ double CPFA_loop_functions::calculatePerfectTime() const
       double time_to_retrieve = 2*robotSpeed*distance + scanTime;
       total_time += time_to_retrieve;
    }
+   return total_time;
 }
 
 void CPFA_loop_functions::SetFoodDistribution() {
