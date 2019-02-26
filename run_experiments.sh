@@ -11,15 +11,16 @@ then
 fi
 
 tag=$1
+mkdir experiments_${tag}
 
-iterations=10
+iterations=5
 
 let i=1
-for clustersize in 4 8 16
+for clustersize in 8
 do
-    for size in 10 20 40 80 160 320
+    for size in 150 200 300 400
     do
-        for r in 1.6 1.2 0.8 0.6 0.4 0.3 0.2 0.15 0.1
+        for r in 0.2
         do
             file=BCPFA_c${clustersize}_R${size}_r${r}_${tag}.argos
             erb -T - \
@@ -31,8 +32,8 @@ do
                 iterations=${iterations} \
                 n=1 \
                 -- experiments/BCPFAExperiment.argos.erb \
-                >experiments/$file
-            echo "argos3 -c experiments/$file > results/$file.results"
+                >experiments_${tag}/$file
+            echo "cd ~/research/CPFA-ARGoS; argos3 -c experiments_${tag}/$file > results_${tag}/$file.results; cd ../.."
         done
     done
 done

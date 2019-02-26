@@ -49,12 +49,12 @@ void CPFA_controller::Init(argos::TConfigurationNode &node) {
 }
 
 void CPFA_controller::ControlStep() {
-	CVector3 position3d(GetPosition().GetX(), GetPosition().GetY(), 0.00);
-	CVector3 target3d(previous_position.GetX(), previous_position.GetY(), 0.00);
+	CVector3 position3d(GetPosition().GetX(), GetPosition().GetY(), 0.01);
+	CVector3 target3d(previous_position.GetX(), previous_position.GetY(), 0.01);
 	CRay3 targetRay(target3d, position3d);
-	// myTrail.push_back(targetRay);
-	// LoopFunctions->TargetRayList.push_back(targetRay);
-	// LoopFunctions->TargetRayColorList.push_back(TrailColor);
+	myTrail.push_back(targetRay);
+	LoopFunctions->TargetRayList.push_back(targetRay);
+	LoopFunctions->TargetRayColorList.push_back(TrailColor);
 
 	previous_position = GetPosition();
 
@@ -133,6 +133,9 @@ void CPFA_controller::SetLoopFunctions(CPFA_loop_functions* lf) {
 	// Initialize the SiteFidelityPosition
 
 	// Create the output file here because it needs LoopFunctions
+
+    // Share the detection radius.
+    LoopFunctions->SetDetectionRadius(FoodDistanceTolerance);
 		
 	// Name the results file with the current time and date
 	time_t t = time(0);   // get time now

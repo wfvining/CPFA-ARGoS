@@ -64,6 +64,8 @@ class CPFA_loop_functions : public argos::CLoopFunctions
 		double getRateOfLayingPheromone();
 		double getRateOfPheromoneDecay();
 
+   void SetDetectionRadius(double r) { detection_radius = r; }
+
 	protected:
 
 		void setScore(double s);
@@ -136,6 +138,7 @@ class CPFA_loop_functions : public argos::CLoopFunctions
    argos::Real firstTime = 0;
    double perfectTime;
 		int PrintFinalScore;
+   double detection_radius = 0.2;
 };
 
 #endif /* CPFA_LOOP_FUNCTIONS_H */

@@ -161,7 +161,8 @@ void CPFA_loop_functions::PostStep() {
 bool CPFA_loop_functions::IsExperimentFinished() {
 	bool isFinished = false;
 
-	if(score == NumDistributedFood /* || GetSpace().GetSimulationClock() >= MaxSimTime*/) {
+	if(score == NumDistributedFood || getSimTimeInSeconds() >= 30*perfectTime
+       /* || GetSpace().GetSimulationClock() >= MaxSimTime*/) {
 		isFinished = true;
 	}
 
@@ -227,11 +228,11 @@ double CPFA_loop_functions::calculatePerfectTime() const
    double scanTime   = 4.0;  // According to a comment @ CPFA_controller.cpp:565
    for(argos::CVector2 f : FoodList)
    {
-      double distance = f.Length();
-      double time_to_retrieve = 2*robotSpeed*distance + scanTime;
+      double distance = f.Length() - detection_radius;
+      double time_to_retrieve = 2*(distance/robotSpeed) /* + scanTime */;
       total_time += time_to_retrieve;
    }
-   return total_time;
+   return total_time / Num_robots;
 }
 
 void CPFA_loop_functions::SetFoodDistribution() {
@@ -497,8 +498,8 @@ double CPFA_loop_functions::getRateOfPheromoneDecay() {
 
 argos::Real CPFA_loop_functions::getSimTimeInSeconds() {
 	int ticks_per_second = GetSimulator().GetPhysicsEngine("Default").GetInverseSimulationClockTick();
-	float sim_time = GetSpace().GetSimulationClock();
-	return sim_time/ticks_per_second;
+	double sim_time = GetSpace().GetSimulationClock();
+	return sim_time/(double)ticks_per_second;
 }
 
 void CPFA_loop_functions::SetTrial(unsigned int v) {
