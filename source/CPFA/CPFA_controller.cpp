@@ -128,12 +128,32 @@ bool CPFA_controller::IsInTheNest() {
 		< LoopFunctions->NestRadiusSquared);
 }
 
+void CPFA_controller::SetInitialTarget()
+{
+   search_x = LoopFunctions->ForageRangeX.GetMin();
+   search_y = LoopFunctions->ForageRangeY.GetMin();
+
+   // perimiter of the square / 2*target distance gives the number of
+   // search locations.
+   argos::Real perimiter = 2.0*(LoopFunctions->ForageRangeX.GetMax() - LoopFunctions->ForageRangeY.GetMin()
+                                + LoopFunctions->ForageRangeY.GetMax() - LoopFunctions->ForageRangeY.GetMin());
+   int number_of_search_locations = ceil(perimiter / (2.0*sqrt(FoodDistanceTolerance)));
+   int locations_per_robot = number_of_search_locations / LoopFunctions->Num_robots;
+
+   // As a hack I just call NextSearchLocation a bunch of times to set the initial offset.
+   std::cout << "init (perimiter: << " << perimiter << "nsl: " << number_of_search_locations << "lpr: " << locations_per_robot << ", " << stoi(controllerID.substr(5)) << ")" << std::endl;
+   for(int i = 0; i < (locations_per_robot*stoi(controllerID.substr(5)))-1; i++)
+   {
+      std::cout << "step" << std::endl;
+      NextSearchLocation();
+   }
+}
+
 void CPFA_controller::SetLoopFunctions(CPFA_loop_functions* lf) {
 	LoopFunctions = lf;
 
     // Initialize the search location
-    search_x = LoopFunctions->ForageRangeX.GetMin();
-    search_y = LoopFunctions->ForageRangeY.GetMin();
+    SetInitialTarget();
 
 	// Initialize the SiteFidelityPosition
 
@@ -172,11 +192,14 @@ argos::CVector2 CPFA_controller::NextSearchLocation()
    argos::Real max_y = LoopFunctions->ForageRangeY.GetMax();
    argos::Real min_y = LoopFunctions->ForageRangeY.GetMin();
 
+   // XXX: FoodDistanceTolerance is the squared distance.
+   // XXX: WHY!?!?!?!?!?!?!?!?!?
+   argos::Real increment = 2.0*sqrt(FoodDistanceTolerance);
    // Increasing y
    switch(current_edge)
    {
    case INCREASE_X:
-      search_x += 2.0*FoodDistanceTolerance;
+      search_x += increment;
       if(search_x >= max_x && search_y <= min_y)
       {
           current_edge = INCREASE_Y;
@@ -187,7 +210,7 @@ argos::CVector2 CPFA_controller::NextSearchLocation()
       }
       break;
    case DECREASE_Y:
-      search_y -= 2.0*FoodDistanceTolerance;
+      search_y -= increment;
       if(search_y <= min_y && search_x <= min_x)
       {
           current_edge = INCREASE_X;
@@ -198,7 +221,7 @@ argos::CVector2 CPFA_controller::NextSearchLocation()
       }
       break;
    case INCREASE_Y:
-      search_y += 2.0*FoodDistanceTolerance;
+      search_y += increment;
       if(search_y >= max_y && search_x <= min_x)
       {
           current_edge = INCREASE_X;
@@ -209,7 +232,7 @@ argos::CVector2 CPFA_controller::NextSearchLocation()
       }
       break;
    case DECREASE_X:
-      search_x -= 2.0*FoodDistanceTolerance;
+      search_x -= increment;
       if(search_x <= min_x && search_y <= min_y)
       {
           current_edge = INCREASE_Y;
@@ -220,7 +243,7 @@ argos::CVector2 CPFA_controller::NextSearchLocation()
       }
       break;
    }
-   
+   std::cout << search_x << " " << search_y  << std::endl;
    return CVector2(search_x, search_y);
 }
 
@@ -232,7 +255,7 @@ void CPFA_controller::Departing()
     if(updateSearchTarget) {
        updateSearchTarget = false;
        argos::CVector2 t = NextSearchLocation();
-       search_target = CVector2(100000, t.Angle());
+       search_target = t + CVector2(1.0, t.Angle()); //CVector2(100, t.Angle());
     }
 
 	/* When not informed, continue to travel until randomly switching to the searching state. */
@@ -295,6 +318,7 @@ void CPFA_controller::Searching() {
            // Give up searching if there is an obstacle or we have
            // reached the edge of the arena.
            if(AtMaximumRange() /*|| CollisionDetected()*/) {
+              std::cout << "at " << GetPosition() << std::endl;
              SetFidelityList();
    	         TrailToShare.clear();
 				SetIsHeadingToNest(true);
@@ -338,8 +362,9 @@ void CPFA_controller::Searching() {
 			// uninformed search
 			if(isInformed == false) {
 				SetIsHeadingToNest(false);
-                argos::CRadians h = (search_target - GetPosition()).Angle();
-				SetTarget(GetPosition() + CVector2(SearchStepSize, h));
+                argos::CRadians h = (search_target - LoopFunctions->NestPosition).Angle();
+                auto distance_from_nest = (GetPosition() - LoopFunctions->NestPosition).Length();
+				SetTarget(CVector2(distance_from_nest + SearchStepSize, h));
 			}
 			// informed search
 			else if(isInformed == true) {
