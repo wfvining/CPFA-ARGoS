@@ -53,9 +53,11 @@ void CPFA_controller::ControlStep() {
 	CVector3 position3d(GetPosition().GetX(), GetPosition().GetY(), 0.01);
 	CVector3 target3d(previous_position.GetX(), previous_position.GetY(), 0.01);
 	CRay3 targetRay(target3d, position3d);
+#ifdef WITH_TRAILS
 	myTrail.push_back(targetRay);
 	LoopFunctions->TargetRayList.push_back(targetRay);
 	LoopFunctions->TargetRayColorList.push_back(TrailColor);
+#endif // WITH_TRAILS
 
 	previous_position = GetPosition();
 
