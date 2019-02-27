@@ -1,6 +1,8 @@
 #include "CPFA_controller.h"
 #include <unistd.h>
 
+#define WITH_TRAILS
+
 CPFA_controller::CPFA_controller() :
 	RNG(argos::CRandom::CreateRNG("argos")),
 	isInformed(false),
@@ -84,6 +86,7 @@ void CPFA_controller::Reset() {
 	isUsingSiteFidelity = false;
 	isGivingUpSearch = false;
     SetInitialTarget();
+    CPFA_state = RETURNING;
 }
 
 bool CPFA_controller::IsHoldingFood() {
@@ -135,6 +138,7 @@ void CPFA_controller::SetInitialTarget()
 {
    search_x = LoopFunctions->ForageRangeX.GetMin();
    search_y = LoopFunctions->ForageRangeY.GetMin();
+   current_edge = INCREASE_X;
 
    // perimiter of the square / 2*target distance gives the number of
    // search locations.
