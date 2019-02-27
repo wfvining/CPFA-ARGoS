@@ -188,7 +188,8 @@ void CPFA_loop_functions::PostExperiment() {
                 << nintyPercentTime     << " "
                 << nintyFivePercentTime << " "
                 << nintyNinePercentTime << " "
-                << getSimTimeInSeconds() << std::endl;
+                << getSimTimeInSeconds() << " "
+                << score << std::endl;
    }
 }
 
