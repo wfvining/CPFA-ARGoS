@@ -83,6 +83,7 @@ void CPFA_controller::Reset() {
 	isHoldingFood = false;
 	isUsingSiteFidelity = false;
 	isGivingUpSearch = false;
+    SetInitialTarget();
 }
 
 bool CPFA_controller::IsHoldingFood() {
@@ -143,10 +144,8 @@ void CPFA_controller::SetInitialTarget()
    int locations_per_robot = number_of_search_locations / LoopFunctions->Num_robots;
 
    // As a hack I just call NextSearchLocation a bunch of times to set the initial offset.
-   std::cout << "init (perimiter: << " << perimiter << "nsl: " << number_of_search_locations << "lpr: " << locations_per_robot << ", " << stoi(controllerID.substr(5)) << ")" << std::endl;
    for(int i = 0; i < (locations_per_robot*stoi(controllerID.substr(5)))-1; i++)
    {
-      std::cout << "step" << std::endl;
       NextSearchLocation();
    }
 }
@@ -245,7 +244,6 @@ argos::CVector2 CPFA_controller::NextSearchLocation()
       }
       break;
    }
-   std::cout << search_x << " " << search_y  << std::endl;
    return CVector2(search_x, search_y);
 }
 
@@ -320,7 +318,6 @@ void CPFA_controller::Searching() {
            // Give up searching if there is an obstacle or we have
            // reached the edge of the arena.
            if(AtMaximumRange() /*|| CollisionDetected()*/) {
-              std::cout << "at " << GetPosition() << std::endl;
              SetFidelityList();
    	         TrailToShare.clear();
 				SetIsHeadingToNest(true);
