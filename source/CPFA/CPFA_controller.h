@@ -97,6 +97,8 @@ class CPFA_controller : public BaseController {
 		bool isUsingPheromone;
 
 		unsigned int survey_count;
+   argos::CVector2 search_target;
+   bool updateSearchTarget = true;
 };
 
 #endif /* CPFA_CONTROLLER_H */

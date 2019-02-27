@@ -165,8 +165,13 @@ void CPFA_controller::Departing()
 	argos::Real distanceToTarget = (GetPosition() - GetTarget()).Length();
 	argos::Real randomNumber = RNG->Uniform(argos::CRange<argos::Real>(0.0, 1.0));
 
-    argos::Real targetHeading = RNG->Uniform(argos::CRange<argos::Real>(0.0, argos::CRadians::TWO_PI.GetValue()));
-    argos::CVector2 turn_vector(100, argos::CRadians(targetHeading));
+    if(updateSearchTarget) {
+       updateSearchTarget = false;
+       argos::CVector2 turn_vector(1000, argos::CRadians(3.14/4.0));
+
+       search_target = turn_vector + LoopFunctions->NestPosition;
+       std::cout << "[DEPARTING] setting search target" << std::endl;
+    }
 
 	/* When not informed, continue to travel until randomly switching to the searching state. */
 	if((SimulationTick() % (SimulationTicksPerSecond() / 2)) == 0) {
@@ -176,7 +181,7 @@ void CPFA_controller::Departing()
               SearchTime = 0;
 			  CPFA_state = SEARCHING;
 			  SetIsHeadingToNest(false);
-			  SetTarget(turn_vector + GetPosition());
+			  SetTarget(search_target);
            }
            else if(distanceToTarget < TargetDistanceTolerance) {
               SetRandomSearchLocation();
@@ -270,16 +275,11 @@ void CPFA_controller::Searching() {
 
 			// uninformed search
 			if(isInformed == false) {
-				argos::Real USCV = LoopFunctions->UninformedSearchVariation.GetValue();
-				argos::Real rand = RNG->Gaussian(USCV);
-				argos::CRadians rotation(rand);
-				argos::CRadians angle1(rotation);
-				argos::CRadians angle2(GetHeading());
-				argos::CRadians turn_angle(angle1 + angle2);
-				argos::CVector2 turn_vector(SearchStepSize, turn_angle);
-
 				SetIsHeadingToNest(false);
-				SetTarget(turn_vector + GetPosition());
+                argos::CRadians h = (search_target - GetPosition()).Angle();
+                argos::CVector2 t = GetPosition() + CVector2(0.5, h);
+                std::cout << "uninformed search update " << t << "(" << GetPosition() << ")" << std::endl;
+				SetTarget(GetPosition() + CVector2(SearchStepSize, h));
 			}
 			// informed search
 			else if(isInformed == true) {
@@ -359,6 +359,7 @@ void CPFA_controller::Returning() {
 	//SetTarget(LoopFunctions->NestPosition);
 
 	// Are we there yet? (To the nest, that is.)
+   updateSearchTarget = true;
 	if(IsInTheNest() == true) {
 		// Based on a Poisson CDF, the robot may or may not create a pheromone
 		// located at the last place it picked up food.
