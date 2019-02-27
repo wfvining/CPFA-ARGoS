@@ -16,24 +16,27 @@ mkdir experiments_${tag}
 iterations=5
 
 let i=1
-for clustersize in 8
+for n in 1 10
 do
-    for size in 10 20 40 60 80 100 150 200 300 400
+    for clustersize in 8
     do
-        for r in 0.2
+        for size in 10 20 40 60 80 100 150 200 300 400
         do
-            file=SCPFA_c${clustersize}_R${size}_r${r}_${tag}.argos
-            erb -T - \
-                csize=${clustersize} \
-                sitefidelity=0.0 \
-                size=${size} \
-                detectionradius=${r} \
-                seed=${RANDOM} \
-                iterations=${iterations} \
-                n=1 \
-                -- experiments/BCPFAExperiment.argos.erb \
-                >experiments_${tag}/$file
-            echo "cd ~/research/CPFA-ARGoS; argos3 -c experiments_${tag}/$file > results_${tag}/$file.results; cd ../.."
+            for r in 0.2
+            do
+                file=SCPFA_c${clustersize}_R${size}_n${n}_r${r}_${tag}.argos
+                erb -T - \
+                    csize=${clustersize} \
+                    sitefidelity=0.0 \
+                    size=${size} \
+                    detectionradius=${r} \
+                    seed=${RANDOM} \
+                    iterations=${iterations} \
+                    n=${n} \
+                    -- experiments/BCPFAExperiment.argos.erb \
+                    >experiments_${tag}/$file
+                echo "cd ~/research/CPFA-ARGoS; argos3 -c experiments_${tag}/$file > results_${tag}/$file.results; cd ../.."
+            done
         done
     done
 done
