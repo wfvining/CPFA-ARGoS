@@ -27,7 +27,7 @@ do
                 file=SCPFA_c${clustersize}_R${size}_n${n}_r${r}_${tag}.argos
                 erb -T - \
                     csize=${clustersize} \
-                    sitefidelity=0.0 \
+                    sitefidelity=100.0 \
                     size=${size} \
                     detectionradius=${r} \
                     seed=${RANDOM} \
