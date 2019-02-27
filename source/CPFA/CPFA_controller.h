@@ -89,6 +89,7 @@ class CPFA_controller : public BaseController {
 		argos::Real GetPoissonCDF(argos::Real k, argos::Real lambda);
 
 		void UpdateTargetRayList();
+   argos::CVector2 NextSearchLocation();
 
 		CVector2 previous_position;
 
@@ -99,6 +100,15 @@ class CPFA_controller : public BaseController {
 		unsigned int survey_count;
    argos::CVector2 search_target;
    bool updateSearchTarget = true;
+   argos::CRadians offset;
+   argos::Real search_x;
+   argos::Real search_y;
+   enum {
+      INCREASE_Y,
+      INCREASE_X,
+      DECREASE_Y,
+      DECREASE_X,
+   } current_edge = INCREASE_X;
 };
 
 #endif /* CPFA_CONTROLLER_H */
