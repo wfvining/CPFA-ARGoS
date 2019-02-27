@@ -167,7 +167,7 @@ void CPFA_controller::Departing()
 
     if(updateSearchTarget) {
        updateSearchTarget = false;
-       argos::CVector2 turn_vector(1000, argos::CRadians(3.14/4.0));
+       argos::CVector2 turn_vector(10000, argos::CRadians(3.14/4.0));
 
        search_target = turn_vector + LoopFunctions->NestPosition;
        std::cout << "[DEPARTING] setting search target" << std::endl;
@@ -358,9 +358,12 @@ void CPFA_controller::Returning() {
 	//SetHoldingFood();
 	//SetTarget(LoopFunctions->NestPosition);
 
+   if(isHoldingFood == false) {
+      // then we reached the end of the spoke, move to the next spoke.
+      updateSearchTarget = true;
+   }
 	// Are we there yet? (To the nest, that is.)
-   updateSearchTarget = true;
-	if(IsInTheNest() == true) {
+   	if(IsInTheNest() == true) {
 		// Based on a Poisson CDF, the robot may or may not create a pheromone
 		// located at the last place it picked up food.
 		argos::Real poissonCDF_pLayRate    = GetPoissonCDF(ResourceDensity, LoopFunctions->RateOfLayingPheromone);
