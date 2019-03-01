@@ -57,8 +57,10 @@ void CPFA_controller::ControlStep() {
 	CRay3 targetRay(target3d, position3d);
 #ifdef WITH_TRAILS
 	myTrail.push_back(targetRay);
-	LoopFunctions->TargetRayList.push_back(targetRay);
-	LoopFunctions->TargetRayColorList.push_back(TrailColor);
+    if(CPFA_state == SEARCHING) {
+       LoopFunctions->TargetRayList.push_back(targetRay);
+       LoopFunctions->TargetRayColorList.push_back(TrailColor);
+    }
 #endif // WITH_TRAILS
 
 	previous_position = GetPosition();
@@ -367,11 +369,20 @@ void CPFA_controller::Searching() {
 				SetIsHeadingToNest(false);
                 argos::CRadians h = (search_target - LoopFunctions->NestPosition).Angle();
                 auto distance_from_nest = (GetPosition() - LoopFunctions->NestPosition).Length();
-				SetTarget(CVector2(distance_from_nest + SearchStepSize, h));
+                if(fabs(LoopFunctions->ForageRangeX.GetMin()) - fabs(GetPosition().GetX()) < 15*SearchStepSize ||
+                   fabs(LoopFunctions->ForageRangeY.GetMin()) - fabs(GetPosition().GetY()) < 15*SearchStepSize)
+                {
+                   std::cout << "here" << std::endl;
+                   SetTarget(CVector2(distance_from_nest + SearchStepSize, h));
+                }
+                else
+                {
+                   SetTarget(CVector2(distance_from_nest + 10*SearchStepSize, h));
+                }
 			}
 			// informed search
 			else if(isInformed == true) {
-				
+
 				SetIsHeadingToNest(false);
 				
 				if(IsAtTarget()) {
