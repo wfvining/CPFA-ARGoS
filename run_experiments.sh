@@ -24,7 +24,7 @@ do
         do
             for r in 0.2
             do
-                file=BCPFA_c${clustersize}_R${size}_n${n}_r${r}_${tag}.argos
+                file=SCPFA_c${clustersize}_R${size}_n${n}_r${r}_${tag}.argos
                 erb -T - \
                     csize=${clustersize} \
                     sitefidelity=100.0 \
@@ -35,7 +35,7 @@ do
                     n=${n} \
                     -- experiments/BCPFAExperiment.argos.erb \
                     >experiments_${tag}/$file
-                echo "cd ~/research/bcpfa; argos3 -c experiments_${tag}/$file > results_${tag}/$file.results; cd ../.."
+                echo "cd ~/research/CPFA-ARGoS; argos3 -c experiments_${tag}/$file > results_${tag}/$file.results; cd ../.."
             done
         done
     done

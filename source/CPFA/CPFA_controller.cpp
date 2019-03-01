@@ -1,6 +1,8 @@
 #include "CPFA_controller.h"
 #include <unistd.h>
 
+#define WITH_TRAILS
+
 CPFA_controller::CPFA_controller() :
 	RNG(argos::CRandom::CreateRNG("argos")),
 	isInformed(false),
@@ -85,7 +87,7 @@ void CPFA_controller::Reset() {
 	isHoldingFood = false;
 	isUsingSiteFidelity = false;
 	isGivingUpSearch = false;
-    SetNewTarget();
+    SetInitialTarget();
     CPFA_state = RETURNING;
 }
 
@@ -134,7 +136,7 @@ bool CPFA_controller::IsInTheNest() {
 		< LoopFunctions->NestRadiusSquared);
 }
 
-void CPFA_controller::SetNewTarget()
+void CPFA_controller::SetInitialTarget()
 {
    search_x = LoopFunctions->ForageRangeX.GetMin();
    search_y = LoopFunctions->ForageRangeY.GetMin();
@@ -144,12 +146,11 @@ void CPFA_controller::SetNewTarget()
    // search locations.
    argos::Real perimiter = 2.0*(LoopFunctions->ForageRangeX.GetMax() - LoopFunctions->ForageRangeY.GetMin()
                                 + LoopFunctions->ForageRangeY.GetMax() - LoopFunctions->ForageRangeY.GetMin());
-   int number_of_search_locations = ceil(perimiter / (0.25*sqrt(FoodDistanceTolerance)));
-   int randomNumber = RNG->Uniform(argos::CRange<int>(0, number_of_search_locations));
+   int number_of_search_locations = ceil(perimiter / (2.0*sqrt(FoodDistanceTolerance)));
    int locations_per_robot = number_of_search_locations / LoopFunctions->Num_robots;
 
    // As a hack I just call NextSearchLocation a bunch of times to set the initial offset.
-   for(int i = 0; i < randomNumber; i++)
+   for(int i = 0; i < (locations_per_robot*stoi(controllerID.substr(5)))-1; i++)
    {
       NextSearchLocation();
    }
@@ -159,7 +160,7 @@ void CPFA_controller::SetLoopFunctions(CPFA_loop_functions* lf) {
 	LoopFunctions = lf;
 
     // Initialize the search location
-    SetNewTarget();
+    SetInitialTarget();
 
 	// Initialize the SiteFidelityPosition
 
@@ -200,7 +201,7 @@ argos::CVector2 CPFA_controller::NextSearchLocation()
 
    // XXX: FoodDistanceTolerance is the squared distance.
    // XXX: WHY!?!?!?!?!?!?!?!?!?
-   argos::Real increment = 0.25*sqrt(FoodDistanceTolerance);
+   argos::Real increment = 2.0*sqrt(FoodDistanceTolerance);
    // Increasing y
    switch(current_edge)
    {
@@ -259,7 +260,6 @@ void CPFA_controller::Departing()
 
     if(updateSearchTarget) {
        updateSearchTarget = false;
-       SetNewTarget();
        argos::CVector2 t = NextSearchLocation();
        search_target = t + CVector2(1.0, t.Angle()); //CVector2(100, t.Angle());
     }
@@ -372,6 +372,7 @@ void CPFA_controller::Searching() {
                 if(fabs(LoopFunctions->ForageRangeX.GetMin()) - fabs(GetPosition().GetX()) < 15*SearchStepSize ||
                    fabs(LoopFunctions->ForageRangeY.GetMin()) - fabs(GetPosition().GetY()) < 15*SearchStepSize)
                 {
+                   std::cout << "here" << std::endl;
                    SetTarget(CVector2(distance_from_nest + SearchStepSize, h));
                 }
                 else
