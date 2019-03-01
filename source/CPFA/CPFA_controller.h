@@ -90,7 +90,7 @@ class CPFA_controller : public BaseController {
 
 		void UpdateTargetRayList();
    argos::CVector2 NextSearchLocation();
-   void SetInitialTarget();
+   void SetNewTarget();
 
 		CVector2 previous_position;
 

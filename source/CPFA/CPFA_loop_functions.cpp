@@ -161,7 +161,7 @@ void CPFA_loop_functions::PostStep() {
 bool CPFA_loop_functions::IsExperimentFinished() {
 	bool isFinished = false;
 
-	if(score == NumDistributedFood || getSimTimeInSeconds() >= 30*perfectTime
+	if(score == NumDistributedFood || getSimTimeInSeconds() >= 100*perfectTime
        /* || GetSpace().GetSimulationClock() >= MaxSimTime*/) {
 		isFinished = true;
 	}

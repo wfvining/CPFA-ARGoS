@@ -90,7 +90,7 @@
   <!-- *********************** -->
   <!-- * Arena configuration * -->
   <!-- *********************** -->
-  <arena size="30.0, 30.0, 1" center="0,0,0.5">
+  <arena size="400.0, 400.0, 1" center="0,0,0.5">
 
     <floor id="floor" source="loop_functions" pixels_per_meter="10"/>
 
