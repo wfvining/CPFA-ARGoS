@@ -161,10 +161,14 @@ void CPFA_loop_functions::PostStep() {
 bool CPFA_loop_functions::IsExperimentFinished() {
 	bool isFinished = false;
 
-	if(score == NumDistributedFood || getSimTimeInSeconds() >= 30*perfectTime
-       /* || GetSpace().GetSimulationClock() >= MaxSimTime*/) {
-		isFinished = true;
-	}
+	// if(score == NumDistributedFood || getSimTimeInSeconds() >= 30*perfectTime
+    //    /* || GetSpace().GetSimulationClock() >= MaxSimTime*/) {
+	// 	isFinished = true;
+	// }
+    if(FoodList.size() < NumDistributedFood)
+    {
+       isFinished = true;
+    }
 
 	if(isFinished == true && MaxSimCounter > 1) {
 		size_t newSimCounter = SimCounter + 1;

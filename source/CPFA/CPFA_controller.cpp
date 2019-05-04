@@ -1,7 +1,7 @@
 #include "CPFA_controller.h"
 #include <unistd.h>
 
-#define WITH_TRAILS
+// #define WITH_TRAILS
 
 CPFA_controller::CPFA_controller() :
 	RNG(argos::CRandom::CreateRNG("argos")),
@@ -138,22 +138,8 @@ bool CPFA_controller::IsInTheNest() {
 
 void CPFA_controller::SetInitialTarget()
 {
-   search_x = LoopFunctions->ForageRangeX.GetMin();
-   search_y = LoopFunctions->ForageRangeY.GetMin();
-   current_edge = INCREASE_X;
-
-   // perimiter of the square / 2*target distance gives the number of
-   // search locations.
-   argos::Real perimiter = 2.0*(LoopFunctions->ForageRangeX.GetMax() - LoopFunctions->ForageRangeY.GetMin()
-                                + LoopFunctions->ForageRangeY.GetMax() - LoopFunctions->ForageRangeY.GetMin());
-   int number_of_search_locations = ceil(perimiter / (2.0*sqrt(FoodDistanceTolerance)));
-   int locations_per_robot = number_of_search_locations / LoopFunctions->Num_robots;
-
-   // As a hack I just call NextSearchLocation a bunch of times to set the initial offset.
-   for(int i = 0; i < (locations_per_robot*stoi(controllerID.substr(5)))-1; i++)
-   {
-      NextSearchLocation();
-   }
+   int id = stoi(controllerID.substr(5));
+   current_spoke = argos::CRadians(-spoke_angle + (id*spoke_angle));
 }
 
 void CPFA_controller::SetLoopFunctions(CPFA_loop_functions* lf) {
@@ -194,63 +180,7 @@ void CPFA_controller::SetLoopFunctions(CPFA_loop_functions* lf) {
 
 argos::CVector2 CPFA_controller::NextSearchLocation()
 {
-   argos::Real max_x = LoopFunctions->ForageRangeX.GetMax();
-   argos::Real min_x = LoopFunctions->ForageRangeX.GetMin();
-   argos::Real max_y = LoopFunctions->ForageRangeY.GetMax();
-   argos::Real min_y = LoopFunctions->ForageRangeY.GetMin();
-
-   // XXX: FoodDistanceTolerance is the squared distance.
-   // XXX: WHY!?!?!?!?!?!?!?!?!?
-   argos::Real increment = 2.0*sqrt(FoodDistanceTolerance);
-   // Increasing y
-   switch(current_edge)
-   {
-   case INCREASE_X:
-      search_x += increment;
-      if(search_x >= max_x && search_y <= min_y)
-      {
-          current_edge = INCREASE_Y;
-      }
-      else if(search_x >= max_x && search_y >= max_y)
-      {
-          current_edge = DECREASE_Y;
-      }
-      break;
-   case DECREASE_Y:
-      search_y -= increment;
-      if(search_y <= min_y && search_x <= min_x)
-      {
-          current_edge = INCREASE_X;
-      }
-      else if(search_y <= min_y && search_x >= max_x)
-      {
-          current_edge = DECREASE_X;
-      }
-      break;
-   case INCREASE_Y:
-      search_y += increment;
-      if(search_y >= max_y && search_x <= min_x)
-      {
-          current_edge = INCREASE_X;
-      }
-      else if(search_y >= max_y && search_x >= max_x)
-      {
-          current_edge = DECREASE_X;
-      }
-      break;
-   case DECREASE_X:
-      search_x -= increment;
-      if(search_x <= min_x && search_y <= min_y)
-      {
-          current_edge = INCREASE_Y;
-      }
-      else if(search_x <= min_x && search_y >= max_y)
-      {
-          current_edge = DECREASE_Y;
-      }
-      break;
-   }
-   return CVector2(search_x, search_y);
+   return NextSpokeEnd();
 }
 
 void CPFA_controller::Departing()
@@ -303,6 +233,13 @@ bool CPFA_controller::AtMaximumRange()
 {
    return !(LoopFunctions->ForageRangeX.WithinMinBoundExcludedMaxBoundExcluded(GetPosition().GetX()) &&
             LoopFunctions->ForageRangeY.WithinMinBoundExcludedMaxBoundExcluded(GetPosition().GetY()));
+}
+
+argos::CVector2 CPFA_controller::NextSpokeEnd()
+{
+   current_spoke = current_spoke.UnsignedNormalize() + LoopFunctions->Num_robots*spoke_angle;
+
+   return argos::CVector2(1.0, current_spoke);
 }
 
 void CPFA_controller::Searching() {
@@ -372,7 +309,6 @@ void CPFA_controller::Searching() {
                 if(fabs(LoopFunctions->ForageRangeX.GetMin()) - fabs(GetPosition().GetX()) < 15*SearchStepSize ||
                    fabs(LoopFunctions->ForageRangeY.GetMin()) - fabs(GetPosition().GetY()) < 15*SearchStepSize)
                 {
-                   std::cout << "here" << std::endl;
                    SetTarget(CVector2(distance_from_nest + SearchStepSize, h));
                 }
                 else

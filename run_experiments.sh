@@ -13,18 +13,18 @@ fi
 tag=$1
 mkdir experiments_${tag}
 
-iterations=5
+iterations=100
 
 let i=1
-for n in 1 10
+for n in 1 10 100
 do
-    for clustersize in 8
+    for clustersize in 8 16 32 64 128
     do
-        for size in 10 20 40 60 80 100 150 200 300 400
+        for size in 100
         do
             for r in 0.2
             do
-                file=SCPFA_c${clustersize}_R${size}_n${n}_r${r}_${tag}.argos
+                file=GCPFA_c${clustersize}_R${size}_n${n}_r${r}_${tag}.argos
                 erb -T - \
                     csize=${clustersize} \
                     sitefidelity=100.0 \

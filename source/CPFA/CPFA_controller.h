@@ -90,6 +90,7 @@ class CPFA_controller : public BaseController {
 
 		void UpdateTargetRayList();
    argos::CVector2 NextSearchLocation();
+   argos::CVector2 NextSpokeEnd();
    void SetInitialTarget();
 
 		CVector2 previous_position;
@@ -104,12 +105,8 @@ class CPFA_controller : public BaseController {
    argos::CRadians offset;
    argos::Real search_x;
    argos::Real search_y;
-   enum {
-      INCREASE_Y,
-      INCREASE_X,
-      DECREASE_Y,
-      DECREASE_X,
-   } current_edge = INCREASE_X;
+   const argos::CRadians spoke_angle = argos::CRadians::TWO_PI / ((1.0 + sqrt(5.0)) / 2.0);
+   argos::CRadians current_spoke;
 };
 
 #endif /* CPFA_CONTROLLER_H */
